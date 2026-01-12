@@ -4,9 +4,17 @@ import { createDb } from "@/db";
 import { openAPI } from "better-auth/plugins"
 import { Environment } from "@/env";
 
+// Singleton to prevent creating multiple auth instances and database connections
+let authInstance: ReturnType<typeof betterAuth> | null = null;
+
 export const createAuth = (env: Environment) => {
-  const db = createDb(env); // create db per request
-  return betterAuth({
+  // Reuse existing auth instance if already created
+  if (authInstance) {
+    return authInstance;
+  }
+
+  const db = createDb(env);
+  authInstance = betterAuth({
     socialProviders: {
       google: {
         clientId: env.GOOGLE_CLIENT_ID!,
@@ -20,4 +28,6 @@ export const createAuth = (env: Environment) => {
       openAPI(),
     ]
   });
+
+  return authInstance;
 };
